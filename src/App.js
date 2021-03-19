@@ -27,11 +27,29 @@ const particleOptions = {
 }
 
 function App() {
+
   const [input, setInput] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [box, setBox] = useState({});
   const [route, setRoute] = useState('signin');
   const [isSignedIn, setIsSignedIn] = useState(false);
+  const [user, setUser] = useState({
+    id: '',
+    name: '',
+    email: '',
+    entries: 0,
+    joined: ''
+  });
+  
+  const loadUser = (user) => {
+    setUser({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      entries: user.entries,
+      joined: user.joined
+    })
+  }
 
   const calculateFaceLocation = (data) => {
     const clarifaiFace = data.outputs[0].data.regions[0].region_info.bounding_box;
@@ -56,9 +74,30 @@ function App() {
   }
 
   const onBtnSubmit = () => {
-    setImageUrl(input)
-    app.models.predict(Clarifai.FACE_DETECT_MODEL, input)
-      .then(response => displayFaceBox(calculateFaceLocation(response)))
+    setImageUrl(input);
+    app.models
+    .predict(
+      Clarifai.FACE_DETECT_MODEL, 
+      input)
+      .then(response => {
+          if (response) {
+            fetch('http://localhost:3001/image', {
+              method: 'put',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({
+                id: user.id
+              })
+            })
+            .then(res => res.json())
+            .then(count => {
+              setUser(prevState => ({
+                ...prevState,
+                entries : count
+              }))
+            })
+          }
+          displayFaceBox(calculateFaceLocation(response))
+        })
       .catch(err => console.log(err));
   }
 
@@ -81,14 +120,17 @@ function App() {
       { route === 'home' 
       ? <div>
           <Logo />
-          <Rank />
+          <Rank 
+            name={user.name} 
+            entries={user.entries} 
+          />
           <ImageLinkForm onInputChange={onInputChange} onBtnSubmit={onBtnSubmit}/>
           <FaceRecognition box={box} imageUrl={imageUrl}/>
         </div>
        : (
          route === 'signin'
-         ? <Signin onRouteChange={onRouteChange}/>
-         : <Register onRouteChange={onRouteChange} />
+         ? <Signin onRouteChange={onRouteChange} loadUser={loadUser}/>
+         : <Register onRouteChange={onRouteChange} loadUser={loadUser}/>
        ) 
       }
     </div>
