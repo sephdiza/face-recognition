@@ -19,7 +19,7 @@ const Register = ({ onRouteChange, loadUser }) => {
   }
 
   const onSubmitRegister = () => {
-    fetch('http://localhost:3001/register', {
+    fetch('https://murmuring-bastion-27325.herokuapp.com/register', {
       method: 'post',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
@@ -30,7 +30,7 @@ const Register = ({ onRouteChange, loadUser }) => {
     })
       .then(res => res.json())
       .then(user => {
-        if(user){
+        if(user.id){
           console.log(user)
           loadUser(user);
           onRouteChange('home');

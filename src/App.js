@@ -5,14 +5,10 @@ import Navigation from './components/Navigation';
 import Rank from './components/Rank/Rank';
 import Particles from 'react-particles-js';
 import React, { useState } from 'react';
-import Clarifai from 'clarifai';
 import FaceRecognition from './components/FaceRecognition/FaceRecognition';
 import Signin from './components/Signin/Signin';
 import Register from './components/Register/Register';
 
-const app = new Clarifai.App({
-  apiKey: '7b6cf7d7194642caab2dcbf647a2ce0c'
-});
 
 const particleOptions = {
   particles: {
@@ -25,6 +21,8 @@ const particleOptions = {
     }
   }
 }
+
+
 
 function App() {
 
@@ -75,13 +73,17 @@ function App() {
 
   const onBtnSubmit = () => {
     setImageUrl(input);
-    app.models
-    .predict(
-      Clarifai.FACE_DETECT_MODEL, 
-      input)
+      fetch('https://murmuring-bastion-27325.herokuapp.com/imageurl', {
+        method: 'post',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          input: input
+        })
+      })
+      .then(res => res.json())
       .then(response => {
           if (response) {
-            fetch('http://localhost:3001/image', {
+            fetch('https://murmuring-bastion-27325.herokuapp.com/image', {
               method: 'put',
               headers: {'Content-Type': 'application/json'},
               body: JSON.stringify({
@@ -95,6 +97,7 @@ function App() {
                 entries : count
               }))
             })
+            .catch(console.log)
           }
           displayFaceBox(calculateFaceLocation(response))
         })
@@ -104,6 +107,17 @@ function App() {
   const onRouteChange = (route) => {
     if (route === 'signout'){
       setIsSignedIn(false);
+      setInput('');
+      setImageUrl('');
+      setBox({});
+      setRoute('signin');
+      setUser({
+        id: '',
+        name: '',
+        email: '',
+        entries: 0,
+        joined: ''
+      })
     } else if (route === 'home') {
       setIsSignedIn(true);
     }
